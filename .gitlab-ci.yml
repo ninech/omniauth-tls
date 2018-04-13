@@ -39,7 +39,7 @@ build:
     policy: pull
   artifacts:
     paths:
-      - *.gem
+      - '*.gem'
   script:
     - push-gems
   tags:
