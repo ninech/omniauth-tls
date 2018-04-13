@@ -10,7 +10,6 @@ cache:
 
 before_script:
   - ruby -v
-  - bundle -v
 
 stages:
   - prepare
@@ -32,7 +31,6 @@ audit:
     - gem install bundler-audit
     - bundle audit check --update
   allow_failure: true
-  cache:
   tags:
     - openshift
 
