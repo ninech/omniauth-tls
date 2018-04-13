@@ -5,7 +5,7 @@ $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 Gem::Specification.new do |spec|
   spec.name          = 'omniauth-tls'
   spec.version       = File.read(File.expand_path('../VERSION', __FILE__)).strip
-  spec.authors       = ['Christian Mäder']
+  spec.authors       = ['Christian Mader']
   spec.email         = ['cma@nine.ch']
 
   spec.summary       = 'A TLS client certificate omniauth strategy'
