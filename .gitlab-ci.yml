@@ -4,6 +4,7 @@ variables:
   BUNDLE_PATH: vendor/bundle
 
 cache:
+  key: gems
   paths:
     - vendor/bundle
 
@@ -30,6 +31,7 @@ audit:
     - gem install bundler-audit
     - bundle audit check --update
   allow_failure: true
+  cache:
   tags:
     - openshift
 
@@ -38,6 +40,9 @@ test:
   script:
     - bundle exec rspec
   cache:
+    key: gems
+    paths:
+      - vendor/bundle
     policy: pull
   tags:
     - openshift
@@ -47,6 +52,9 @@ build:
     - tags
   stage: build
   cache:
+    key: gems
+    paths:
+      - vendor/bundle
     policy: pull
   artifacts:
     paths:
