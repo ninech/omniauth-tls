@@ -1,4 +1,4 @@
-image: ruby:2.4
+image: ruby:2.5
 
 variables:
   BUNDLE_PATH: vendor/bundle
@@ -9,6 +9,7 @@ cache:
 
 before_script:
   - ruby -v
+  - bundle -v
 
 stages:
   - prepare
@@ -18,7 +19,7 @@ stages:
 prepare:
   stage: prepare
   script:
-    - bundle install --jobs $(nproc)  "${FLAGS[@]}"
+    - bundle install --jobs $(nproc) "${FLAGS[@]}"
   tags:
     - openshift
 
