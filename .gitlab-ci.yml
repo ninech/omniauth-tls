@@ -1,0 +1,46 @@
+image: ruby:2.4
+
+variables:
+  BUNDLE_PATH: vendor/bundle
+
+cache:
+  paths:
+    - vendor/bundle
+
+before_script:
+  - ruby -v
+
+stages:
+  - prepare
+  - test
+  - build
+
+prepare:
+  stage: prepare
+  script:
+    - bundle install --jobs $(nproc)  "${FLAGS[@]}"
+  tags:
+    - openshift
+
+test:
+  stage: test
+  script:
+    - bundle exec rspec
+  cache:
+    policy: pull
+  tags:
+    - openshift
+
+build:
+  only:
+    - tags
+  stage: build
+  cache:
+    policy: pull
+  artifacts:
+    paths:
+      - *.gem
+  script:
+    - push-gems
+  tags:
+    - gem
