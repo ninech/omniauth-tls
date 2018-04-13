@@ -1,4 +1,4 @@
-image: ruby:2.5
+image: docker-registry.nine.ch/ninech/ruby:xenial
 
 variables:
   BUNDLE_PATH: vendor/bundle
@@ -26,6 +26,7 @@ prepare:
     - openshift
 
 audit:
+  image: ruby:2.5
   stage: prepare
   script:
     - gem install bundler-audit
