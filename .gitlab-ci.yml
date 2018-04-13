@@ -20,6 +20,16 @@ prepare:
   stage: prepare
   script:
     - bundle install --jobs $(nproc) "${FLAGS[@]}"
+    - bundle clean --force
+  tags:
+    - openshift
+
+audit:
+  stage: prepare
+  script:
+    - gem install bundler-audit
+    - bundle audit check --update
+  allow_failure: true
   tags:
     - openshift
 
