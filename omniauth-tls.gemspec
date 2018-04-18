@@ -19,9 +19,14 @@ by Apache HTTP, NGINX, etc.}
     spec.metadata['allowed_push_host'] = 'https://rubygems.nine.ch/private'
   end
 
-  spec.files         = `git ls-files -z`.split("\x0").reject do |f|
-    f.match(%r{^(test|spec|features)/})
-  end
+  # spec.files         = `git ls-files -z`.split("\x0").reject do |f|
+  #   f.match(%r{^(test|spec|features)/})
+  # end
+
+  spec.files         = Dir['lib/   *.rb'] + Dir['bin/*']
+  spec.files        += Dir['[A-Z]*'] + Dir['spec/**/*']
+  spec.files.reject! { |fn| fn.include? ".git" }
+
   spec.bindir        = 'exe'
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ['lib']

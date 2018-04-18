@@ -1,0 +1,6 @@
+.bundle
+tmp
+Dockerfile
+.dockerignore
+.gitignore
+

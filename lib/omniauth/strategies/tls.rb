@@ -1,19 +1,23 @@
 require 'omniauth'
+require 'openssl'
 
 module OmniAuth
   module Strategies
     class TLS
       include OmniAuth::Strategy
 
-      class UnknownInformationSource < StandardError
+      class UnknownValueSource < StandardError
       end
       class ClientCertificateValidationFailed < StandardError
       end
 
+      # source of value, :env or :http
+      option :value_source, :env
+
       option :validity_end_variable, 'SSL_CLIENT_V_END'
 
       option :dn_variable, 'SSL_CLIENT_S_DN'
-      option :dn_email_field, 'CN'
+      option :dn_email_field, 'emailAddress'
       option :dn_name_field, 'CN'
 
       ##
@@ -43,60 +47,82 @@ module OmniAuth
 
       extra do
         {
-          raw_info: {
-            dn: dn,
-            v_end: end_date,
-          }
+          dn: dn,
+          v_end: v_end,
         }
       end
 
-      def redirect_phase
+      def request_phase
         redirect callback_url
       end
 
       def callback_phase
-        super unless options.verify_validation_success_state
+        unless ssl?
+          log :debug, 'No TLS request.'
+          return
+        end
 
-        expected_state = options.validation_success_value
-        state = value_of options.validation_success_variable
+        unless options.verify_validation_success_state
+          log :debug, 'TLS client certificate validation is disabled.'
+          return
+        end
 
-        return fail!(:validation_failed,
-              ClientCertificateValidationFailed.new(
-                "The validation state is '#{state}', but the expected state is '#{expected_state}'.")
-        ) if state != expected_state
-
-        super
+        if check_validation_success
+          super
+        else
+          fail!(:validation_failed,
+                ClientCertificateValidationFailed.new("The client certificate could not be validated.")
+          )
+        end
       end
 
       private
 
+      def check_validation_success
+        expected_state = options.validation_success_value
+        state = value_of options.validation_success_variable
+
+        log :debug, "TLS client certificate validation. Expected: '#{options.validation_success_value}', Received: '#{state}'"
+
+        state == expected_state
+      end
+
       def dn_email
-        parsed_dn.to_a.select do |dn_pair|
-          dn_pair[0] == options.dn_email_field
-        end
+        @dn_email ||= dn_field(options.dn_email_field)
       end
 
       def dn_name
-        dn_field(options.dn_name_field)
+        @dn_name ||= dn_field(options.dn_name_field)
       end
 
       def dn_field(field)
         @dn_field_pairs ||= OpenSSL::X509::Name.parse(dn).to_a
 
         dn_field_pair = @dn_field_pairs.select { |dn_pair| dn_pair.first == field }.first
-        dn_field_pair.second
+        return nil unless dn_field_pair
+        dn_field_pair[1]
       end
 
       def v_end
-        value_of options.validity_end_variable
+        @v_end ||= value_of options.validity_end_variable
       end
 
       def dn
-        value_of options.dn_variable
+        @dn ||= value_of options.dn_variable
       end
 
       def value_of(name)
-        request.env[name]
+        case options.value_source
+        when :http
+          log :debug, "Looking for the value of 'HTTP_X_#{name}'"
+          request.env["HTTP_X_#{name}"]
+        when :env
+          log :debug, "Looking for the value of '#{name}'"
+          request.env[name]
+        else
+          raise UnknownValueSource,
+                "'#{options.value_source}' is no recognized source for values. Use ':http' or ':env'."
+        end
       end
     end
   end
